@@ -3,7 +3,7 @@ import dbus
 import dbus.exceptions
 import dbus.mainloop.glib
 import dbus.service
-
+import uuid
 import array
 
 import functools
@@ -31,7 +31,10 @@ GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 GATT_DESC_IFACE =    'org.bluez.GattDescriptor1'
 
+STANDARD_SUFFIX = "-0000-1000-8000-00805f9b34fb"
 
+def fromShortCode(code):
+    return f"{code:08x}{STANDARD_SUFFIX}"
 
 class Application(dbus.service.Object):
     """
@@ -396,7 +399,7 @@ class BatteryLevelCharacteristic(Characteristic):
         if self.battery_lvl > 0:
             self.battery_lvl -= 2
             if self.battery_lvl < 0:
-                self.battery_lvl = 0
+                self.battery_lvl = 100
         print('Battery level: ' + repr(self.battery_lvl))
         self.notify_battery_level()
         return True
@@ -427,13 +430,15 @@ class TestService(Service):
     exercise various API functionality.
 
     """
-    TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0'
+    # TEST_SVC_UUID = fromShortCode(0x1800)
+    # TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0'
+    TEST_SVC_UUID = '0000180a-0000-1000-8000-00805f9b34fb'
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.TEST_SVC_UUID, True)
         self.add_characteristic(TestCharacteristic(bus, 0, self))
-        self.add_characteristic(TestEncryptCharacteristic(bus, 1, self))
-        self.add_characteristic(TestSecureCharacteristic(bus, 2, self))
+        # self.add_characteristic(TestEncryptCharacteristic(bus, 1, self))
+        # self.add_characteristic(TestSecureCharacteristic(bus, 2, self))
 
 class TestCharacteristic(Characteristic):
     """
@@ -441,18 +446,19 @@ class TestCharacteristic(Characteristic):
     contains "extended properties", as well as a test descriptor.
 
     """
-    TEST_CHRC_UUID = '12345678-1234-5678-1234-56789abcdef1'
+    # TEST_CHRC_UUID = '12345678-1234-5678-1234-56789abcdef1'
+    TEST_CHRC_UUID = '00002a00-0000-1000-8000-00805f9b34fb'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
                 self, bus, index,
                 self.TEST_CHRC_UUID,
-                ['read', 'write', 'writable-auxiliaries'],
+                ['read', 'broadcast', 'notify'],
                 service)
-        self.value = []
-        self.add_descriptor(TestDescriptor(bus, 0, self))
-        self.add_descriptor(
-                CharacteristicUserDescriptionDescriptor(bus, 1, self))
+        self.value =  bytes("Synermycha Fake", 'utf-8')
+        # self.add_descriptor(TestDescriptor(bus, 0, self))
+        # self.add_descriptor(
+        #         CharacteristicUserDescriptionDescriptor(bus, 1, self))
 
     def ReadValue(self, options):
         print('TestCharacteristic Read: ' + repr(self.value))
