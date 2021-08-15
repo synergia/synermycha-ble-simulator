@@ -13,6 +13,7 @@ class Characteristic(dbus.service.Object):
         self.service = service
         self.flags = flags
         self.descriptors = []
+        self.value = [dbus.ByteArray()]
         dbus.service.Object.__init__(self, bus, self.path)
 
     def get_properties(self):
@@ -55,8 +56,8 @@ class Characteristic(dbus.service.Object):
                         in_signature='a{sv}',
                         out_signature='ay')
     def ReadValue(self, options):
-        print('Default ReadValue called, returning error')
-        raise exceptions.NotSupportedException()
+        print('Default ReadValue called', self.value)
+        return [self.value]
 
     @dbus.service.method(GATT_CHRC_IFACE, in_signature='aya{sv}')
     def WriteValue(self, value, options):
@@ -73,7 +74,6 @@ class Characteristic(dbus.service.Object):
         print('Default StopNotify called, returning error')
         raise exceptions.NotSupportedException()
 
-    @dbus.service.signal(DBUS_PROP_IFACE,
-                         signature='sa{sv}as')
+    @dbus.service.signal(DBUS_PROP_IFACE, signature='sa{sv}as')
     def PropertiesChanged(self, interface, changed, invalidated):
-        pass
+        self.value = changed['Value']

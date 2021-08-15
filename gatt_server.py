@@ -23,6 +23,8 @@ from service import Service
 from characteristic import Characteristic
 from descriptor import Descriptor
 
+from services.services import *
+
 from services.battery_service.battery_service import BatteryService
 
 def fromShortCode(code):
@@ -36,9 +38,19 @@ class Application(dbus.service.Object):
         self.path = '/'
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
-        self.add_service(HeartRateService(bus, 0))
-        self.add_service(BatteryService(bus, 1))
-        self.add_service(TestService(bus, 2))
+        # self.add_service(HeartRateService(bus, 0))
+        # self.add_service(BatteryService(bus, 1))
+        # self.add_service(TestService(bus, 2))
+
+        for serv_index, service in enumerate(SERVICES):
+            serv = Service(bus, serv_index, service['uuid'], True)
+            for char_index, characteristic in enumerate(service['characteristic']):
+                char = Characteristic(bus, char_index, characteristic, ['read', 'write', 'notify'], serv)
+                char.PropertiesChanged(GATT_CHRC_IFACE, { 'Value': dbus.ByteArray("sas".encode())}, [])
+                    
+                serv.add_characteristic(char)
+            self.add_service(serv)
+
 
     def get_path(self):
         return dbus.ObjectPath(self.path)
