@@ -7,17 +7,14 @@ import random
 from bluezero import async_tools
 from bluezero import adapter
 from bluezero import peripheral
-
+from bluezero import tools
 from consts import *
-# constants
-# Custom service uuid
-CPU_TMP_SRVC = '12341000-1234-1234-1234-123456789abc'
-# https://www.bluetooth.com/specifications/assigned-numbers/
-# Bluetooth SIG adopted UUID for Temperature characteristic
-CPU_TMP_CHRC = '2A6E'
-# Bluetooth SIG adopted UUID for Characteristic Presentation Format
-CPU_FMT_DSCP = '2904'
+from services import SERVICES
 
+l = tools.create_module_logger(__name__)
+l.setLevel(logging.DEBUG)
+
+cb_list = list()
 
 def read_value():
     """
@@ -33,6 +30,7 @@ def read_value():
     cpu_value = random.randrange(3200, 5310, 10) / 100
     # return list(int(cpu_value * 100).to_bytes(2, byteorder='little', signed=True))
     return list("yolo".encode())
+
 
 def update_value(characteristic):
     """
@@ -59,35 +57,44 @@ def notify_callback(notifying, characteristic):
     if notifying:
         async_tools.add_timer_seconds(2, update_value, characteristic)
 
+def read_value_callback_builder(service, characteristic):
+    l.debug("Read char value %s %s", characteristic, str(service['characteristic'][characteristic]))
+    return service['characteristic'][characteristic].encode()
 
 def main(adapter_address):
-    """Creation of peripheral"""
-    logger = logging.getLogger('localGATT')
-    logger.setLevel(logging.DEBUG)
-    # Example of the output from read_value
-    print('CPU temperature is {}\u00B0C'.format(
-        int.from_bytes(read_value(), byteorder='little', signed=True)/100))
+
     # Create peripheral
-    cpu_monitor = peripheral.Peripheral(adapter_address,
-                                        local_name='CPU Monitor',
+    peri = peripheral.Peripheral(adapter_address,
+                                        local_name='SynerMycha Fake',
                                         appearance=1344)
-    # Add service
-    cpu_monitor.add_service(srv_id=1, uuid=CPU_TMP_SRVC, primary=True)
-    # Add characteristic
-    cpu_monitor.add_characteristic(srv_id=1, chr_id=1, uuid=UUID_CHARACTERISTIC_MANUFACTURER_NAME,
-                                   value=[], notifying=False,
-                                   flags=['read', 'notify'],
-                                   read_callback=read_value,
-                                   write_callback=None,
-                                   notify_callback=notify_callback
-                                   )
+
+    for serv_index, service in enumerate(SERVICES):
+        peri.add_service(srv_id=serv_index, uuid=service["uuid"], primary=True)
+        l.debug("Adding service %s", service["uuid"])
+
+        for char_index, characteristic in enumerate(service['characteristic']):
+            l.debug("Adding char %s %s", characteristic, service['characteristic'][characteristic].encode())
+
+            cb_list.append(lambda: read_value_callback_builder(service, characteristic))
+            peri.add_characteristic(srv_id=serv_index,
+                                    chr_id=char_index,
+                                    uuid=characteristic,
+                                    flags=['read', 'notify'],
+                                    value=service['characteristic'][characteristic].encode(),
+                                    read_callback=cb_list[char_index],
+                                    write_callback=None,
+                                    notifying=True,
+                                    notify_callback=notify_callback)
+
+
+
     # Add descriptor
     # cpu_monitor.add_descriptor(srv_id=1, chr_id=1, dsc_id=1, uuid=CPU_FMT_DSCP,
     #                            value=[0x0E, 0xFE, 0x2F, 0x27, 0x01, 0x00,
     #                                   0x00],
     #                            flags=['read'])
     # Publish peripheral and start event loop
-    cpu_monitor.publish()
+    peri.publish()
 
 
 if __name__ == '__main__':
