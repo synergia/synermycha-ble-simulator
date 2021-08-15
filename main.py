@@ -14,7 +14,6 @@ from services import SERVICES
 l = tools.create_module_logger(__name__)
 l.setLevel(logging.DEBUG)
 
-cb_list = list()
 
 def read_value():
     """
@@ -57,9 +56,7 @@ def notify_callback(notifying, characteristic):
     if notifying:
         async_tools.add_timer_seconds(2, update_value, characteristic)
 
-def read_value_callback_builder(service, characteristic):
-    l.debug("Read char value %s %s", characteristic, str(service['characteristic'][characteristic]))
-    return service['characteristic'][characteristic].encode()
+
 
 def main(adapter_address):
 
@@ -74,14 +71,16 @@ def main(adapter_address):
 
         for char_index, characteristic in enumerate(service['characteristic']):
             l.debug("Adding char %s %s", characteristic, service['characteristic'][characteristic].encode())
+            def read_value_callback_builder(service=service, characteristic=characteristic):
+                l.debug("Read char value %s %s", characteristic, str(service['characteristic'][characteristic]))
+                return service['characteristic'][characteristic].encode()
 
-            cb_list.append(lambda: read_value_callback_builder(service, characteristic))
             peri.add_characteristic(srv_id=serv_index,
                                     chr_id=char_index,
                                     uuid=characteristic,
                                     flags=['read', 'notify'],
                                     value=service['characteristic'][characteristic].encode(),
-                                    read_callback=cb_list[char_index],
+                                    read_callback=read_value_callback_builder,
                                     write_callback=None,
                                     notifying=True,
                                     notify_callback=notify_callback)
