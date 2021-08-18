@@ -13,29 +13,29 @@ SERVICES = [
         }
     },
     {
-        'uuid': "1a7c321e723211eb94390242ac130002", #Telemetry
+        'uuid': UUID_SERVICE_TELEMETRY, #Telemetry
         'characteristic': {
-            "1a7c3796723211eb94390242ac130002": '98', #Batt %
-            "1a7c38a4723211eb94390242ac130002": '7.2', #Batt V  
-            "1a7c3976723211eb94390242ac130002": '2', #Internal State
-            "1a7c3afc723211eb94390242ac130002": '123,456,789', #MU Euler
-            "1a7c3bb0723211eb94390242ac130002": '12345,67890,67890,67890,67890', #Distance RAW
-            "1a7c3c6e723211eb94390242ac130002": '12345,67890', #Encoder Tics
-            "1a7c3f34723211eb94390242ac130002": '12345,67890', #Motor PWM
+            UUID_CHARACTERISTIC_BATTERY_PERCENTAGE: '98', #Batt %
+            UUID_CHARACTERISTIC_BATTERY_VOLTAGE: '7.2', #Batt V  
+            UUID_CHARACTERISTIC_INTERNAL_STATE: '2', #Internal State
+            UUID_CHARACTERISTIC_MU_EULER: '123,456,789', #MU Euler
+            UUID_CHARACTERISTIC_DISTANCE_RAW: '12345,67890,67890,67890,67890', #Distance RAW
+            UUID_CHARACTERISTIC_ENCODER_TICS: '12345,67890', #Encoder Tics
+            UUID_CHARACTERISTIC_MOTOR_PWM: '12345,67890', #Motor PWM
         }
     },
-    {
-        'uuid': "1a7c4006723211eb94390242ac130002", #Map
-        'characteristic': {
-            "1a7c40c4723211eb94390242ac130002": '123456789012345678901234567890', #Map
-        }
-    },
-    {
-        'uuid': "1a7c4a4c723211eb94390242ac130002", #Ctrl
-        'characteristic': {
-            "1a7c4b28723211eb94390242ac130002": '1,1,0', #Mode, r, fi
-            "1a7c4bf0723211eb94390242ac130002": '7.2,', #RGB Led
-            "1a7c4ff6723211eb94390242ac130002": '7.2,7.2,7.2', #PID
-        }
-    }
+    # {
+    #     'uuid': UUID_SERVICE_MAP, #Map
+    #     'characteristic': {
+    #         UUID_CHARACTERISTIC_MAP: 'opopopop', #Map
+    #     }
+    # },
+    # {
+    #     'uuid': UUID_SERVICE_CONTROL, #Ctrl
+    #     'characteristic': {
+    #         UUID_CHARACTERISTIC_MODE: '1,1,0', #Mode, r, fi
+    #         UUID_CHARACTERISTIC_LED_RGB: '7.2,', #RGB Led
+    #         UUID_CHARACTERISTIC_PID: '7.2,7.2,7.2', #PID
+    #     }
+    # }
 ]
